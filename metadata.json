@@ -1,0 +1,5 @@
+{
+  "name": "Project Dashboard from Google Sheets",
+  "description": "A dynamic project management dashboard that pulls live data directly from a Google Sheet, providing real-time insights into project status, budgets, and progress.",
+  "requestFramePermissions": []
+}
