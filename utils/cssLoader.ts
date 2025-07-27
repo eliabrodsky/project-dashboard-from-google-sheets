@@ -1,6 +1,6 @@
-import Logger from '../services/logger';
+import logger from '../services/logger';
 
-const logger = new Logger('CSSLoader');
+const CONTEXT = 'CSSLoader';
 
 /**
  * Safely load CSS with proper error handling and MIME type checking
@@ -13,7 +13,7 @@ export class SafeCSSLoader {
    */
   static async loadCSS(cssContent: string, id: string): Promise<void> {
     if (this.loadedStyles.has(id)) {
-      logger.info(`CSS already loaded: ${id}`);
+      logger.info(`CSS already loaded: ${id}`, undefined, CONTEXT);
       return;
     }
 
@@ -34,9 +34,9 @@ export class SafeCSSLoader {
       document.head.appendChild(styleElement);
       
       this.loadedStyles.add(id);
-      logger.success(`Successfully loaded CSS: ${id}`);
+      logger.success(`Successfully loaded CSS: ${id}`, undefined, CONTEXT);
     } catch (error) {
-      logger.error(`Failed to load CSS: ${id}`, error);
+      logger.error(`Failed to load CSS: ${id}`, error, CONTEXT);
       throw error;
     }
   }
@@ -46,7 +46,7 @@ export class SafeCSSLoader {
    */
   static async loadCSSFromURL(url: string, id: string, fallbackCSS?: string): Promise<void> {
     if (this.loadedStyles.has(id)) {
-      logger.info(`CSS already loaded: ${id}`);
+      logger.info(`CSS already loaded: ${id}`, undefined, CONTEXT);
       return;
     }
 
@@ -60,20 +60,20 @@ export class SafeCSSLoader {
 
       // Add error handling
       linkElement.onerror = () => {
-        logger.warn(`Failed to load CSS from URL: ${url}, using fallback`);
+        logger.warn(`Failed to load CSS from URL: ${url}, using fallback`, undefined, CONTEXT);
         if (fallbackCSS) {
           this.loadCSS(fallbackCSS, id + '-fallback');
         }
       };
 
       linkElement.onload = () => {
-        logger.success(`Successfully loaded CSS from URL: ${url}`);
+        logger.success(`Successfully loaded CSS from URL: ${url}`, undefined, CONTEXT);
         this.loadedStyles.add(id);
       };
 
       document.head.appendChild(linkElement);
     } catch (error) {
-      logger.error(`Error loading CSS from URL: ${url}`, error);
+      logger.error(`Error loading CSS from URL: ${url}`, error, CONTEXT);
       if (fallbackCSS) {
         await this.loadCSS(fallbackCSS, id + '-fallback');
       }
@@ -88,7 +88,7 @@ export class SafeCSSLoader {
     if (element) {
       element.remove();
       this.loadedStyles.delete(id);
-      logger.info(`Removed CSS: ${id}`);
+      logger.info(`Removed CSS: ${id}`, undefined, CONTEXT);
     }
   }
 }

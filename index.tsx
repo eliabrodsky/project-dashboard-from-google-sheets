@@ -1,25 +1,44 @@
+
+// /updated file 2024-07-24T12:00:00Z
+// index.tsx
+import logger from './services/logger';
+logger.info("--- STARTING BOOTSTRAP ---");
+logger.info("01: Logger imported.");
+
+logger.info("02: Importing React...");
 import React from 'react';
+logger.info("03: React imported successfully.");
+
+logger.info("04: Importing ReactDOM...");
 import ReactDOM from 'react-dom/client';
+logger.info("05: ReactDOM imported successfully.");
+
+// --- DEBUGGING STEP 2: ENABLE APP COMPONENTS ---
+logger.info("06: Importing App component...");
 import App from './App';
+logger.info("07: App component imported successfully.");
+
+logger.info("08: Importing ErrorBoundary component...");
 import ErrorBoundary from './components/ErrorBoundary';
-import Logger from './services/logger';
-import { setupGlobalErrorHandlers } from './utils/errorHandlers';
+logger.info("09: ErrorBoundary component imported successfully.");
 
-const logger = new Logger('Index');
-
-// Setup global error handlers as early as possible
-setupGlobalErrorHandlers();
-
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  const errorMessage = "Could not find root element to mount to";
-  logger.error(errorMessage, new Error(errorMessage));
-  throw new Error(errorMessage);
-}
 
 try {
+  logger.info("10: Getting root element from DOM...");
+  const rootElement = document.getElementById('root');
+
+  if (!rootElement) {
+    logger.error("CRITICAL: Could not find root element to mount to.", {});
+    throw new Error("Could not find root element to mount to");
+  }
+  logger.info("11: Root element found.");
+
+  logger.info("12: Creating React root...");
   const root = ReactDOM.createRoot(rootElement);
-  
+  logger.info("13: React root created.");
+
+  // --- DEBUGGING STEP 2: RENDER FULL APPLICATION ---
+  logger.info("14: Rendering application...");
   root.render(
     <React.StrictMode>
       <ErrorBoundary>
@@ -27,52 +46,21 @@ try {
       </ErrorBoundary>
     </React.StrictMode>
   );
-  
-  logger.success('React application mounted successfully');
+  logger.success("15: React application rendered successfully.");
+
 } catch (mountError) {
-  logger.error('Failed to mount React application', mountError);
+  logger.error("CRITICAL: Failed to mount application", { error: mountError });
   
-  // Fallback error display
-  rootElement.innerHTML = `
-    <div style="
-      padding: 20px; 
-      margin: 20px; 
-      border: 2px solid #ef4444; 
-      border-radius: 8px; 
-      background-color: #fef2f2;
-      font-family: Arial, sans-serif;
-    ">
-      <h2 style="color: #dc2626; margin-top: 0;">
-        🚨 Application Failed to Start
-      </h2>
-      <p>The project dashboard could not be initialized.</p>
-      <details style="margin-top: 16px;">
-        <summary style="cursor: pointer; padding: 8px; background-color: #fee2e2; border: 1px solid #fca5a5; border-radius: 4px;">
-          Click to see error details
-        </summary>
-        <pre style="
-          margin-top: 8px; 
-          padding: 12px; 
-          background-color: #fff; 
-          border: 1px solid #d1d5db; 
-          border-radius: 4px; 
-          font-size: 12px; 
-          overflow: auto;
-          white-space: pre-wrap;
-        ">${mountError instanceof Error ? mountError.message : String(mountError)}</pre>
-      </details>
-      <div style="margin-top: 16px;">
-        <button onclick="window.location.reload()" style="
-          padding: 8px 16px; 
-          background-color: #3b82f6; 
-          color: white; 
-          border: none; 
-          border-radius: 4px; 
-          cursor: pointer;
-        ">
-          Reload Page
-        </button>
-      </div>
-    </div>
-  `;
+  // Fallback error display if React fails to render
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+      rootElement.innerHTML = `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h1>Application failed to start</h1>
+          <p>A critical error occurred during initialization.</p>
+          <p>Please check the browser console for a step-by-step log to identify the point of failure.</p>
+          <pre style="background: #eee; padding: 10px; border-radius: 4px; white-space: pre-wrap;">${mountError instanceof Error ? mountError.stack : String(mountError)}</pre>
+        </div>
+      `;
+  }
 }

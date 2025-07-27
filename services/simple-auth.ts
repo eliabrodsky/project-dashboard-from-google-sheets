@@ -1,8 +1,8 @@
 import { google, Auth } from 'googleapis';
 import { GOOGLE_CONFIG } from '../config';
-import Logger from './logger';
+import logger from './logger';
 
-const logger = new Logger('AuthService');
+const CONTEXT = 'AuthService';
 
 class SimpleAuthService {
   public oauth2Client: Auth.OAuth2Client;
@@ -15,7 +15,7 @@ class SimpleAuthService {
       GOOGLE_CONFIG.REDIRECT_URI
     );
     this.isAuthenticated = false;
-    logger.info('AuthService initialized.');
+    logger.info('Initialized.', undefined, CONTEXT);
   }
   
   getAuthUrl(): string {
@@ -27,60 +27,60 @@ class SimpleAuthService {
       ],
       prompt: 'consent'
     });
-    logger.info('Generated authentication URL.');
+    logger.info('Generated authentication URL.', undefined, CONTEXT);
     return url;
   }
   
   async authenticate(code: string): Promise<Auth.Credentials> {
-    logger.info('Attempting to exchange authorization code for tokens.');
+    logger.info('Attempting to exchange authorization code for tokens.', undefined, CONTEXT);
     try {
       const { tokens } = await this.oauth2Client.getToken(code);
       this.oauth2Client.setCredentials(tokens);
       this.isAuthenticated = true;
       
       localStorage.setItem('project_tokens', JSON.stringify(tokens));
-      logger.success('Successfully authenticated and stored tokens.', { expiry: new Date(tokens.expiry_date || 0).toLocaleString() });
+      logger.success('Successfully authenticated and stored tokens.', { expiry: new Date(tokens.expiry_date || 0).toLocaleString() }, CONTEXT);
       return tokens;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error_description || error.message || 'An unknown error occurred during authentication.';
-      logger.error('Authentication failed during token exchange', error.response?.data || error);
+      logger.error('Authentication failed during token exchange', error.response?.data || error, CONTEXT);
       throw new Error(`Authentication failed: ${errorMessage}`);
     }
   }
   
   loadStoredTokens(): boolean {
-    logger.info('Checking for stored tokens in localStorage.');
+    logger.info('Checking for stored tokens in localStorage.', undefined, CONTEXT);
     try {
       const stored = localStorage.getItem('project_tokens');
       if (stored) {
         const tokens = JSON.parse(stored);
         if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
-            logger.warn('Stored tokens are expired.');
+            logger.warn('Stored tokens are expired.', undefined, CONTEXT);
             this.signOut();
             return false;
         }
         this.oauth2Client.setCredentials(tokens);
         this.isAuthenticated = true;
-        logger.success('Successfully loaded and validated stored tokens.');
+        logger.success('Successfully loaded and validated stored tokens.', undefined, CONTEXT);
         return true;
       }
-      logger.info('No stored tokens found.');
+      logger.info('No stored tokens found.', undefined, CONTEXT);
     } catch (error) {
-      logger.error('Failed to load or parse stored tokens', error);
+      logger.error('Failed to load or parse stored tokens', error, CONTEXT);
     }
     return false;
   }
   
   getClient(): Auth.OAuth2Client {
     if (!this.isAuthenticated) {
-      logger.error('Attempted to get client, but user is not authenticated.', {});
+      logger.error('Attempted to get client, but user is not authenticated.', {}, CONTEXT);
       throw new Error('Not authenticated');
     }
     return this.oauth2Client;
   }
   
   signOut(): void {
-    logger.info('Signing out user and clearing tokens.');
+    logger.info('Signing out user and clearing tokens.', undefined, CONTEXT);
     this.isAuthenticated = false;
     this.oauth2Client.setCredentials({});
     localStorage.removeItem('project_tokens');

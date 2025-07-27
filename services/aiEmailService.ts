@@ -1,28 +1,27 @@
+
 import { GoogleGenAI } from "@google/genai";
 import type { Project } from '../types';
-import { GEMINI_API_KEY } from '../config';
-import Logger from './logger';
+import logger from './logger';
 
-const logger = new Logger('AIEmailService');
+const CONTEXT = 'AIEmailService';
 
 let ai: GoogleGenAI | null = null;
-if (GEMINI_API_KEY && !GEMINI_API_KEY.startsWith('YOUR_GEMINI_API_KEY')) {
-  try {
-    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-    logger.success('GoogleGenAI initialized successfully.');
-  } catch (error) {
-    logger.error("Failed to initialize GoogleGenAI", error);
-  }
-} else {
-  logger.warn("Gemini API key is not configured in src/config.ts. Email generation will be disabled.");
+try {
+  // As per coding guidelines, the API key is sourced exclusively from `process.env.API_KEY`.
+  // This is assumed to be configured in the execution environment.
+  ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  logger.success('GoogleGenAI initialized successfully.', undefined, CONTEXT);
+} catch (error) {
+  logger.error("Failed to initialize GoogleGenAI. This is likely due to a missing API_KEY in the environment.", error, CONTEXT);
+  // ai remains null, and AI-powered features will be gracefully disabled.
 }
 
 
 export async function generateStatusUpdateEmail(project: Project): Promise<string> {
-  logger.info('Generating status update email for project.', { projectName: project.projectName });
+  logger.info('Generating status update email for project.', { projectName: project.projectName }, CONTEXT);
   if (!ai) {
-    logger.error('Attempted to generate email, but AI service is not available.', {});
-    throw new Error("Gemini AI Service is not available. Please configure your API key in src/config.ts.");
+    logger.error('Attempted to generate email, but AI service is not available.', {}, CONTEXT);
+    throw new Error("Gemini AI Service is not available. Ensure the API_KEY is configured in your environment.");
   }
 
   const prompt = `
@@ -84,10 +83,10 @@ export async function generateStatusUpdateEmail(project: Project): Promise<strin
       contents: prompt,
     });
     const emailText = response.text;
-    logger.success('Successfully generated email content via Gemini.', { responseLength: emailText.length });
+    logger.success('Successfully generated email content via Gemini.', { responseLength: emailText.length }, CONTEXT);
     return emailText;
   } catch (error) {
-    logger.error("Error generating email with Gemini API", error);
+    logger.error("Error generating email with Gemini API", error, CONTEXT);
     throw new Error("Failed to generate email content from the AI.");
   }
 }

@@ -1,12 +1,12 @@
 import { google } from 'googleapis';
 import authService from './simple-auth';
-import Logger from './logger';
+import logger from './logger';
 
-const logger = new Logger('GmailService');
+const CONTEXT = 'GmailService';
 
 async function getGmailClient() {
     if (!authService.isAuthenticated) {
-        logger.error('Attempted to get Gmail client, but user is not authenticated.', {});
+        logger.error('Attempted to get Gmail client, but user is not authenticated.', {}, CONTEXT);
         throw new Error('User is not authenticated. Cannot send email.');
     }
     const client = authService.getClient();
@@ -30,12 +30,12 @@ function createEmailMessage(to: string[], subject: string, htmlContent: string):
 }
 
 export async function sendEmail(to: string[], subject: string, htmlContent: string): Promise<void> {
-    logger.info('Preparing to send email via Gmail API.', { to, subjectLength: subject.length });
+    logger.info('Preparing to send email via Gmail API.', { to, subjectLength: subject.length }, CONTEXT);
     try {
         const gmail = await getGmailClient();
-        logger.info('Gmail client obtained.');
+        logger.info('Gmail client obtained.', undefined, CONTEXT);
         const rawMessage = createEmailMessage(to, subject, htmlContent);
-        logger.info('Encoded email message for API.');
+        logger.info('Encoded email message for API.', undefined, CONTEXT);
 
         await gmail.users.messages.send({
             userId: 'me',
@@ -43,10 +43,10 @@ export async function sendEmail(to: string[], subject: string, htmlContent: stri
                 raw: rawMessage,
             },
         });
-        logger.success('Successfully sent email via Gmail API.');
+        logger.success('Successfully sent email via Gmail API.', undefined, CONTEXT);
     } catch (error: any) {
         const errorMessage = error.response?.data?.error?.message || error.message || 'An unknown error occurred while sending the email.';
-        logger.error('Failed to send email via Gmail API', error);
+        logger.error('Failed to send email via Gmail API', error, CONTEXT);
         throw new Error(`Gmail API Error: ${errorMessage}`);
     }
 }

@@ -1,8 +1,9 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import Logger from '../services/logger';
 
-const logger = new Logger('ErrorBoundary');
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import logger from '../services/logger';
+
+const CONTEXT = 'ErrorBoundary';
 
 interface Props {
   children: ReactNode;
@@ -37,7 +38,7 @@ class ErrorBoundary extends Component<Props, State> {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
-    });
+    }, CONTEXT);
     this.setState({ error, errorInfo });
   }
 

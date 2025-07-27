@@ -1,13 +1,14 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Eye, Edit3, Send, Users, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { Project } from '../types';
 import { generateStatusUpdateEmail } from '../services/aiEmailService';
 import { sendEmail } from '../services/gmailService';
-import Logger from '../services/logger';
+import logger from '../services/logger';
 import { handlePrimitiveConversionError } from '../utils/errorHandlers';
 
-const logger = new Logger('EmailModal');
+const CONTEXT = 'EmailModal';
 
 interface EmailModalProps {
   project: Project;
@@ -46,16 +47,16 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
 
   const generateEmailContent = async () => {
     setStatus({ type: 'generating', message: 'Generating email content with AI...' });
-    logger.info('Starting email content generation', { projectId: project.id });
+    logger.info('Starting email content generation', { projectId: project.id }, CONTEXT);
     
     try {
       // Try to use AI service first, fall back to mock if unavailable
       let content: string;
       try {
         content = await generateStatusUpdateEmail(project);
-        logger.success('Generated email content using AI service');
+        logger.success('Generated email content using AI service', undefined, CONTEXT);
       } catch (aiError) {
-        logger.warn('AI service unavailable, using fallback content', { error: aiError });
+        logger.warn('AI service unavailable, using fallback content', { error: aiError }, CONTEXT);
         content = generateFallbackEmailContent(project);
       }
 
@@ -74,9 +75,9 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
       setEditedContent(mockEmailData.content);
       setEditedSubject(mockEmailData.subject);
       setStatus({ type: 'idle', message: '' });
-      logger.success('Email content prepared successfully');
+      logger.success('Email content prepared successfully', undefined, CONTEXT);
     } catch (error) {
-      logger.error('Failed to generate email content', error);
+      logger.error('Failed to generate email content', error, CONTEXT);
       setStatus({ 
         type: 'error', 
         message: handlePrimitiveConversionError(error, 'Failed to generate email')
@@ -161,7 +162,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
     logger.info('Attempting to send email', { 
       recipientCount: emailData.recipients.length,
       subject: editedSubject 
-    });
+    }, CONTEXT);
 
     try {
       const recipientEmails = emailData.recipients.map(r => String(r.email || ''));
@@ -169,9 +170,9 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
       // Try to send via Gmail API, fall back to mock
       try {
         await sendEmail(recipientEmails, editedSubject, editedContent);
-        logger.success('Email sent successfully via Gmail API');
+        logger.success('Email sent successfully via Gmail API', undefined, CONTEXT);
       } catch (gmailError) {
-        logger.warn('Gmail API unavailable, simulating email send', { error: gmailError });
+        logger.warn('Gmail API unavailable, simulating email send', { error: gmailError }, CONTEXT);
         // Simulate delay for mock sending
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
@@ -184,7 +185,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
         setStatus({ type: 'idle', message: '' });
       }, 2000);
     } catch (error) {
-      logger.error('Failed to send email', error);
+      logger.error('Failed to send email', error, CONTEXT);
       setStatus({ 
         type: 'error', 
         message: handlePrimitiveConversionError(error, 'Failed to send email')
@@ -194,11 +195,11 @@ const EmailModal: React.FC<EmailModalProps> = ({ project, isOpen, onClose }) => 
 
   const toggleEditMode = () => {
     setEditMode(!editMode);
-    logger.info(`Email edit mode ${!editMode ? 'enabled' : 'disabled'}`);
+    logger.info(`Email edit mode ${!editMode ? 'enabled' : 'disabled'}`, undefined, CONTEXT);
   };
 
   const safeCloseModal = () => {
-    logger.info('Closing email modal');
+    logger.info('Closing email modal', undefined, CONTEXT);
     onClose();
   };
 

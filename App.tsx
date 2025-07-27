@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import authService from './services/simple-auth';
 import projectService from './services/project-service';
@@ -5,20 +6,19 @@ import type { Project, ProjectSummary } from './types';
 import { LogOut, Mail } from 'lucide-react';
 import EmailModal from './components/EmailModal';
 import ErrorBoundary from './components/ErrorBoundary';
-import Logger from './services/logger';
+import logger from './services/logger';
 import { SafeCSSLoader, EMAIL_MODAL_CSS } from './utils/cssLoader';
 import { 
   safeString, 
   safeNumber, 
   handlePrimitiveConversionError, 
-  setupGlobalErrorHandlers,
   debugObjectProperties,
   safeApiCall
 } from './utils/errorHandlers';
 
-const logger = new Logger('App');
 
 function App() {
+  logger.info('App component rendering or re-rendering...');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [summary, setSummary] = useState<ProjectSummary | null>(null);
@@ -31,8 +31,7 @@ function App() {
 
   // Setup error handlers and CSS on component mount
   useEffect(() => {
-    setupGlobalErrorHandlers();
-    
+    logger.info('App.tsx: Main useEffect running...');
     // Load EmailModal CSS safely from string
     SafeCSSLoader.loadCSS(EMAIL_MODAL_CSS, 'email-modal-styles')
       .catch((cssError) => {
@@ -68,10 +67,10 @@ function App() {
     const code = urlParams.get('code');
 
     if (code) {
-      logger.info('Authorization code found in URL, attempting to authenticate.');
+      logger.info('App.tsx: Authorization code found, attempting to authenticate.');
       try {
         await authService.authenticate(code);
-        logger.success('Authentication successful from auth code.');
+        logger.success('App.tsx: Authentication successful from auth code.');
         window.history.replaceState({}, document.title, window.location.pathname);
       } catch (authError) {
         handleError(authError, 'Authentication failed');
@@ -80,7 +79,7 @@ function App() {
   };
   
   const fetchProjectData = async () => {
-    logger.info('Attempting to fetch project data.');
+    logger.info('App.tsx: Attempting to fetch project data.');
     
     return safeApiCall(async () => {
       await projectService.initialize();
@@ -99,29 +98,29 @@ function App() {
       setLastUpdated(new Date().toLocaleTimeString());
       setError(null);
       
-      logger.success('Successfully fetched and processed project data.', { numProjects: projectData.length });
+      logger.success('App.tsx: Successfully fetched and processed project data.', { numProjects: projectData.length });
     }, 'fetchProjectData');
   };
 
   useEffect(() => {
     const initializeApp = async () => {
-      logger.info('Initializing application...');
+      logger.info('App.tsx: Initializing application...');
       setLoading(true);
       
       try {
         await handleAuthCallback();
         const hasTokens = authService.loadStoredTokens();
         if (hasTokens) {
-          logger.info('User has stored tokens, proceeding to fetch data.');
+          logger.info('App.tsx: User has stored tokens, proceeding to fetch data.');
           await fetchProjectData();
         } else {
-          logger.warn('No stored tokens found. User needs to sign in.');
+          logger.warn('App.tsx: No stored tokens found. User needs to sign in.');
         }
       } catch (initError) {
         handleError(initError, 'App initialization failed');
       } finally {
         setLoading(false);
-        logger.info('Application initialization complete.');
+        logger.info('App.tsx: Application initialization complete.');
       }
     };
 
@@ -137,7 +136,7 @@ function App() {
   }, []);
   
   const handleSignIn = () => {
-    logger.info('User initiated sign-in.');
+    logger.info('App.tsx: User initiated sign-in.');
     try {
       const authUrl = authService.getAuthUrl();
       window.location.href = authUrl;
@@ -147,7 +146,7 @@ function App() {
   };
 
   const handleSignOut = () => {
-    logger.info('User initiated sign-out.');
+    logger.info('App.tsx: User initiated sign-out.');
     authService.signOut();
     setIsAuthenticated(false);
     setProjects([]);
@@ -157,7 +156,7 @@ function App() {
   
   const refreshProjects = async (isAutoRefresh = false) => {
     if (!isAuthenticated) return;
-    logger.info(isAutoRefresh ? 'Auto-refreshing projects...' : 'Manual refresh initiated...');
+    logger.info(isAutoRefresh ? 'App.tsx: Auto-refreshing projects...' : 'App.tsx: Manual refresh initiated...');
     if (!isAutoRefresh) setIsRefreshing(true);
     
     try {
@@ -170,7 +169,7 @@ function App() {
         setLastUpdated(new Date().toLocaleTimeString());
         setError(null);
         
-        logger.success('Project data refreshed successfully.');
+        logger.success('App.tsx: Project data refreshed successfully.');
       }, 'refreshProjects');
     } catch (refreshError) {
       handleError(refreshError, 'Refresh failed');
@@ -181,7 +180,7 @@ function App() {
 
   const handleOpenEmailModal = (project: Project) => {
     try {
-      logger.info('Opening email modal for project.', { projectName: safeString(project.projectName) });
+      logger.info('App.tsx: Opening email modal for project.', { projectName: safeString(project.projectName) });
       setSelectedProjectForEmail(project);
       setIsEmailModalOpen(true);
     } catch (modalError) {
@@ -191,7 +190,7 @@ function App() {
 
   const handleCloseEmailModal = () => {
     try {
-      logger.info('Closing email modal.');
+      logger.info('App.tsx: Closing email modal.');
       setIsEmailModalOpen(false);
       setSelectedProjectForEmail(null);
     } catch (modalError) {
@@ -200,6 +199,7 @@ function App() {
   };
   
   if (loading) {
+    logger.info('App.tsx: Rendering Loading screen.');
     return (
       <div className="loading">
         <h2>Loading Project Dashboard...</h2>
@@ -208,6 +208,7 @@ function App() {
   }
   
   if (!isAuthenticated) {
+    logger.info('App.tsx: Rendering Auth Required screen.');
     return (
       <div className="auth-required">
         <h2>Project Dashboard</h2>
@@ -220,6 +221,7 @@ function App() {
     );
   }
   
+  logger.info('App.tsx: Rendering main dashboard.');
   return (
     <ErrorBoundary>
       <div className="project-dashboard">

@@ -2,9 +2,9 @@ import { google, sheets_v4 } from 'googleapis';
 import authService from './simple-auth';
 import { SPREADSHEET_CONFIG, REFRESH_INTERVAL } from '../config';
 import type { Project } from '../types';
-import Logger from './logger';
+import logger from './logger';
 
-const logger = new Logger('ProjectService');
+const CONTEXT = 'ProjectService';
 
 class ProjectService {
   private sheets: sheets_v4.Sheets | null = null;
@@ -12,51 +12,51 @@ class ProjectService {
   private lastFetch: number | null = null;
 
   async initialize() {
-    logger.info('Initializing ProjectService...');
+    logger.info('Initializing...', undefined, CONTEXT);
     if (!authService.isAuthenticated) {
-      logger.warn('Initialization failed: user not authenticated.');
+      logger.warn('Initialization failed: user not authenticated.', undefined, CONTEXT);
       throw new Error('Authentication required');
     }
     
     const client = authService.getClient();
     this.sheets = google.sheets({ version: 'v4', auth: client });
-    logger.success('ProjectService initialized with Google Sheets client.');
+    logger.success('Initialized with Google Sheets client.', undefined, CONTEXT);
   }
 
   async getProjectData(): Promise<Project[]> {
-    logger.info('getProjectData called.');
+    logger.info('getProjectData called.', undefined, CONTEXT);
     if (!this.sheets) {
-        logger.warn('Sheets service not initialized. Initializing now...');
+        logger.warn('Sheets service not initialized. Initializing now...', undefined, CONTEXT);
         await this.initialize();
         if(!this.sheets) {
-            logger.error("Sheets service could not be initialized.", {});
+            logger.error("Sheets service could not be initialized.", {}, CONTEXT);
             throw new Error("Sheets service could not be initialized.");
         }
     }
 
     if (this.isCacheValid()) {
-      logger.info('Returning cached project data.');
+      logger.info('Returning cached project data.', undefined, CONTEXT);
       return this.cache!;
     }
     
-    logger.info('Cache is invalid or empty. Fetching data from Google Sheets...');
+    logger.info('Cache is invalid or empty. Fetching data from Google Sheets...', undefined, CONTEXT);
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_CONFIG.ID,
         range: `${SPREADSHEET_CONFIG.SHEET_NAME}!${SPREADSHEET_CONFIG.RANGE}`
       });
-      logger.success('Successfully fetched data from Google Sheets.');
+      logger.success('Successfully fetched data from Google Sheets.', undefined, CONTEXT);
       
       const rawData = response.data.values || [];
       const projects = this.parseProjectData(rawData);
       
       this.cache = projects;
       this.lastFetch = Date.now();
-      logger.info(`Parsed and cached ${projects.length} projects.`);
+      logger.info(`Parsed and cached ${projects.length} projects.`, undefined, CONTEXT);
       
       return projects;
     } catch (error) {
-      logger.error('Failed to fetch project data from Google Sheets', error);
+      logger.error('Failed to fetch project data from Google Sheets', error, CONTEXT);
       throw error;
     }
   }
@@ -120,13 +120,13 @@ class ProjectService {
   }
   
   clearCache(): void {
-    logger.info('Clearing project data cache.');
+    logger.info('Clearing project data cache.', undefined, CONTEXT);
     this.cache = null;
     this.lastFetch = null;
   }
   
   async refreshData(): Promise<Project[]> {
-    logger.info('Refreshing project data.');
+    logger.info('Refreshing project data.', undefined, CONTEXT);
     this.clearCache();
     return this.getProjectData();
   }

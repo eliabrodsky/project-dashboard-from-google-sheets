@@ -1,3 +1,4 @@
+<!-- /updated file 2024-07-24T12:00:00Z -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -5,18 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Project Dashboard</title>
     <link rel="icon" href="data:,">
-    
-  <script type="importmap">
+    <script>
+      // Shim for libraries that expect a Node.js environment.
+      // This must run before any other scripts to prevent crashes in dependencies.
+      window.process = {
+        stdout: { isTTY: false },
+        env: {
+          // Add FORCE_COLOR to signal to dependencies (like 'colours') to disable colorization.
+          // This prevents a crash in some versions of googleapis's dependencies.
+          FORCE_COLOR: '0', 
+        },
+        platform: 'browser',
+        versions: {}
+      };
+    </script>
+    <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.1.0",
     "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
     "lucide-react": "https://esm.sh/lucide-react@^0.525.0",
     "googleapis": "https://esm.sh/googleapis@^143.0.0?target=browser",
     "date-fns": "https://esm.sh/date-fns@^4.1.0",
     "recharts": "https://esm.sh/recharts@^3.1.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.10.0"
+    "@google/genai": "https://esm.sh/@google/genai@^1.10.0",
+    "react/": "https://esm.sh/react@^19.1.0/"
   }
 }
 </script>

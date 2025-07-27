@@ -1,3 +1,4 @@
+
 // IMPORTANT: Replace these with your actual Google Cloud credentials.
 // You can get them from the Google Cloud Console: https://console.cloud.google.com/apis/credentials
 // IMPORTANT: The Redirect URI must be the exact URL of your deployed application and must be added to your "Authorized redirect URIs" in the Cloud Console.
@@ -8,10 +9,8 @@ export const GOOGLE_CONFIG = {
     REDIRECT_URI: 'https://dchc-internal-project-management-dashboard-668607868334.us-west1.run.app/', // Replace with your app's deployed URL
 };
 
-// IMPORTANT: Add your Gemini API Key here.
-// You can get a key from Google AI Studio: https://aistudio.google.com/app/apikey
-// In a production environment, you would use a secure method to provide this key.
-export const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+// IMPORTANT: The Gemini API Key is now sourced from the `process.env.API_KEY` environment variable.
+// It is no longer configured in this file.
 
 export const SPREADSHEET_CONFIG = {
     ID: '1cXMam-lw1W3idSH6IzdgJEraFVE8s2L8LvF10SRYR4k',
@@ -56,9 +55,6 @@ if (typeof window !== 'undefined') {
         const issues: string[] = [];
         if (!GOOGLE_CONFIG.CLIENT_ID || GOOGLE_CONFIG.CLIENT_ID.startsWith('YOUR_GOOGLE_CLIENT')) {
             issues.push('Google Client ID not configured in src/config.ts');
-        }
-        if (!GEMINI_API_KEY || GEMINI_API_KEY.startsWith('YOUR_GEMINI_API_KEY')) {
-            issues.push('Gemini API Key not configured in src/config.ts (AI features will be disabled)');
         }
         
         if (issues.length > 0) {
